@@ -1,6 +1,6 @@
 name: 'Lambda deployer'
 description: | 
-  Simple composite action to package and deploy python, nodejs and java maven lambda functions.
+  Simple composite action to package and deploy py, js and java mvn lambdas.
   By design, this action has limited use cases.
 inputs:
   function-languages:
