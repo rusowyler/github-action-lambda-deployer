@@ -1,0 +1,92 @@
+name: 'Lambda deployer'
+description: | 
+  Simple composite action to package and deploy python, nodejs and java maven lambda functions.
+  By design, this action has limited functionalities and limited use cases.
+inputs:
+  function-languages:
+    description: nodejs, python or java-mvn
+  function-name:
+    description: 'Name of the lambda function'
+    required: true
+  function-path:
+    description: 'Directory of the function'
+    required: true
+    default: './'
+  function-publish:
+    description: 'Wether to create or not a new version'
+    required: true
+    default: 'true'
+outputs:
+  function-version:
+    description: "The lambda function version"
+    value: ${{ steps.random-number-generator.outputs.random-number }}
+runs:
+  using: "composite"
+  steps:
+    - name: Python dependencies
+      uses: actions/setup-python@v4
+      if: ${{ inputs.function-languages == 'python' }}
+      with:
+        python-version: "3.8"
+        cache: "pip"
+
+    - name: Package Python function
+      if: ${{ inputs.function-languages == 'python' }}
+      shell: bash
+      run: |
+        #!/usr/bin/env bash
+
+        INIT=$(pwd)
+        FUNCTION_DIR=${{ inputs.function-path }}
+
+        cd $INIT/$FUNCTION_DIR
+        printf "\033[1;35m>> Installing requirements ${fldr} \033[0m\n"
+        pip3 install -r requirements.txt -t package --no-deps
+        find . -type d -name '__pycache__' -print0 | xargs -0 rm -rf
+
+        printf "\033[1;35m>> Zipping function \033[0m\n"
+        cd $INIT/$FUNCTION_DIR/package/ && zip -q -r $INIT/lambda.zip .
+        cd $INIT/$FUNCTION_DIR/ && zip -g $INIT/lambda.zip index.py
+        cd $INIT
+
+    - name: Package NodeJs
+      if: ${{ inputs.function-languages == 'nodejs' }}
+      shell: bash
+      run: |
+        #!/usr/bin/env bash
+
+        INIT=$(pwd)
+        FUNCTION_DIR=${{ inputs.function-path }}
+
+        cd $INIT/$FUNCTION_DIR
+        npm install
+        npm run build
+        npm run package
+        cd $INIT
+
+    - name: Package Java MVN
+      if: ${{ inputs.function-languages == 'java-mvn' }}
+      shell: bash
+      run: |
+        #!/usr/bin/env bash
+
+        INIT=$(pwd)
+        FUNCTION_DIR=${{ inputs.function-path }}
+
+        cd $INIT/$FUNCTION_DIR
+        mvn package -Djar.finalName=lambda
+        cp target/lambda.jar ../lambda.zip
+        cd $INIT
+
+    - name:  Deploy the Lambda function code
+      uses: taotao2345/aws-lambda-updatecode@v1.0.0
+      with:
+        function_name: ${{ inputs.function-name }}
+        zip_file: lambda.zip
+        publish: ${{ inputs.function-publish }}
+    
+    - name: Get Lambda function version
+      shell: bash
+      run: |
+        version=$(aws lambda list-versions-by-function --function-name dev-mtl-uw2-python-demo --no-paginate --query "max_by(Versions, &to_number(to_number(Version) || '0')).Version")
+        echo "function-version=$(echo $version)" >> $GITHUB_OUTPUT
