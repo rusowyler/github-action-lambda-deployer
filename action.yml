@@ -78,12 +78,18 @@ runs:
         cp target/lambda.jar ../lambda.zip
         cd $INIT
 
-    - name:  Deploy the Lambda function code
-      uses: taotao2345/aws-lambda-updatecode@v1.0.0
-      with:
-        function_name: ${{ inputs.function-name }}
-        zip_file: lambda.zip
-        publish: ${{ inputs.function-publish }}
+    - name: Deploy Lambda function
+      shell: bash
+      run: |
+        #!/usr/bin/env bash
+        aws lambda update-function-code --function-name ${{ inputs.function-name }} --zip-file fileb://lambda.zip --publish
+        
+    # - name:  Deploy the Lambda function code
+    #   uses: taotao2345/aws-lambda-updatecode@v1.0.0
+    #   with:
+    #     function_name: ${{ inputs.function-name }}
+    #     zip_file: lambda.zip
+    #     publish: ${{ inputs.function-publish }}
     
     - name: Get Lambda function version
       shell: bash
