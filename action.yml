@@ -35,56 +35,36 @@ runs:
       shell: bash
       run: |
         #!/usr/bin/env bash
-
-        INIT=$(pwd)
-        FUNCTION_DIR=${{ inputs.function-path }}
-
-        cd $INIT/$FUNCTION_DIR
-        printf "\033[1;35m>> Installing requirements ${fldr} \033[0m\n"
+        cd ${{ inputs.function-path }}
         pip3 install -r requirements.txt -t package --no-deps
         find . -type d -name '__pycache__' -print0 | xargs -0 rm -rf
-
-        printf "\033[1;35m>> Zipping function \033[0m\n"
-        cd $INIT/$FUNCTION_DIR/package/ && zip -q -r $INIT/lambda.zip .
-        cd $INIT/$FUNCTION_DIR/ && zip -g $INIT/lambda.zip index.py
-        cd $INIT
+        cd $INIT/${{ inputs.function-path }}/package/ && zip -q -r ${{ env.GITHUB_WORKSPACE }}/lambda.zip .
+        cd $INIT/${{ inputs.function-path }}/ && zip -g ${{ env.GITHUB_WORKSPACE }}/lambda.zip index.py
 
     - name: Package NodeJs
       if: ${{ inputs.function-languages == 'nodejs' }}
       shell: bash
       run: |
         #!/usr/bin/env bash
-
-        INIT=$(pwd)
-        FUNCTION_DIR=${{ inputs.function-path }}
-
-        cd $INIT/$FUNCTION_DIR
+        cd ${{ inputs.function-path }}
         npm install
         npm run build
         npm run package
-        cd $INIT
 
     - name: Package Java MVN
       if: ${{ inputs.function-languages == 'java-mvn' }}
       shell: bash
       run: |
         #!/usr/bin/env bash
-
-        INIT=$(pwd)
-        FUNCTION_DIR=${{ inputs.function-path }}
-
-        cd $INIT/$FUNCTION_DIR
+        cd ${{ inputs.function-path }}
         mvn package -Djar.finalName=lambda
-        cp target/lambda.jar $INIT/lambda.zip
-        ls -las
-        ls -las target/
-        cd $INIT
+        cp target/lambda.jar ${{ env.GITHUB_WORKSPACE }}/lambda.zip
 
     - name: Deploy Lambda function
       shell: bash
       run: |
         #!/usr/bin/env bash
-        aws lambda update-function-code --function-name ${{ inputs.function-name }} --zip-file fileb://lambda.zip --publish
+        aws lambda update-function-code --function-name ${{ inputs.function-name }} --zip-file fileb://${{ env.GITHUB_WORKSPACE }}/lambda.zip --publish
         
     - name: Get Lambda function version
       shell: bash
