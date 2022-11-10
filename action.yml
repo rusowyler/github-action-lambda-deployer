@@ -38,8 +38,8 @@ runs:
         cd ${{ inputs.function-path }}
         pip3 install -r requirements.txt -t package --no-deps
         find . -type d -name '__pycache__' -print0 | xargs -0 rm -rf
-        cd $INIT/${{ inputs.function-path }}/package/ && zip -q -r ${{ env.GITHUB_WORKSPACE }}/lambda.zip .
-        cd $INIT/${{ inputs.function-path }}/ && zip -g ${{ env.GITHUB_WORKSPACE }}/lambda.zip index.py
+        cd $GITHUB_WORKSPACE/${{ inputs.function-path }}/package/ && zip -q -r $GITHUB_WORKSPACE/lambda.zip .
+        cd $GITHUB_WORKSPACE/${{ inputs.function-path }}/ && zip -g $GITHUB_WORKSPACE/lambda.zip index.py
 
     - name: Package NodeJs
       if: ${{ inputs.function-languages == 'nodejs' }}
@@ -58,13 +58,13 @@ runs:
         #!/usr/bin/env bash
         cd ${{ inputs.function-path }}
         mvn package -Djar.finalName=lambda
-        cp target/lambda.jar ${{ env.GITHUB_WORKSPACE }}/lambda.zip
+        cp target/lambda.jar $GITHUB_WORKSPACE/lambda.zip
 
     - name: Deploy Lambda function
       shell: bash
       run: |
         #!/usr/bin/env bash
-        aws lambda update-function-code --function-name ${{ inputs.function-name }} --zip-file fileb://${{ env.GITHUB_WORKSPACE }}/lambda.zip --publish
+        aws lambda update-function-code --function-name ${{ inputs.function-name }} --zip-file fileb://$GITHUB_WORKSPACE/lambda.zip --publish
         
     - name: Get Lambda function version
       shell: bash
