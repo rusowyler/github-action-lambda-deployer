@@ -84,15 +84,8 @@ runs:
         #!/usr/bin/env bash
         aws lambda update-function-code --function-name ${{ inputs.function-name }} --zip-file fileb://lambda.zip --publish
         
-    # - name:  Deploy the Lambda function code
-    #   uses: taotao2345/aws-lambda-updatecode@v1.0.0
-    #   with:
-    #     function_name: ${{ inputs.function-name }}
-    #     zip_file: lambda.zip
-    #     publish: ${{ inputs.function-publish }}
-    
     - name: Get Lambda function version
       shell: bash
       run: |
-        version=$(aws lambda list-versions-by-function --function-name dev-mtl-uw2-python-demo --no-paginate --query "max_by(Versions, &to_number(to_number(Version) || '0')).Version")
+        version=$(aws lambda list-versions-by-function --function-name ${{ inputs.function-name }} --no-paginate --query "max_by(Versions, &to_number(to_number(Version) || '0')).Version")
         echo "function-version=$(echo $version)" >> $GITHUB_OUTPUT
