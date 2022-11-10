@@ -75,6 +75,8 @@ runs:
 
         cd $INIT/$FUNCTION_DIR
         mvn package -Djar.finalName=lambda
+        ls -las
+        ls -las target/
         cp target/lambda.jar ../lambda.zip
         cd $INIT
 
