@@ -31,7 +31,7 @@ runs:
       uses: actions/setup-python@v4
       if: ${{ inputs.function-languages == 'python' }}
       with:
-        python-version: "3.8"
+        python-version: "3.9"
         cache: "pip"
 
     - name: Package Python function
@@ -42,8 +42,12 @@ runs:
         cd ${{ inputs.function-path }}
         pip3 install -r requirements.txt -t package
         find . -type d -name '__pycache__' -print0 | xargs -0 rm -rf
-        cd $GITHUB_WORKSPACE/${{ inputs.function-path }}/package/ && zip -q -r $GITHUB_WORKSPACE/lambda.zip .
-        cd $GITHUB_WORKSPACE/${{ inputs.function-path }}/ && zip -r -g $GITHUB_WORKSPACE/lambda.zip ${{ inputs.include-files }}
+        if [ "$(ls -A $GITHUB_WORKSPACE/${{ inputs.function-path }}/package/)" ]; then
+          cd $GITHUB_WORKSPACE/${{ inputs.function-path }}/package/ && zip -q -r $GITHUB_WORKSPACE/lambda.zip .
+          cd $GITHUB_WORKSPACE/${{ inputs.function-path }}/ && zip -r -g $GITHUB_WORKSPACE/lambda.zip ${{ inputs.include-files }}
+        else
+          cd $GITHUB_WORKSPACE/${{ inputs.function-path }}/ && zip -r $GITHUB_WORKSPACE/lambda.zip ${{ inputs.include-files }}
+        fi    
 
     - name: Package NodeJs
       if: ${{ inputs.function-languages == 'nodejs' }}
