@@ -20,6 +20,10 @@ inputs:
     description: 'A space separated list of directories and/or files to be included'
     required: true
     default: 'index.py'
+  python-version:
+    description: 'Python version'
+    required: false
+    default: '3.9'
 outputs:
   function-version:
     description: "The lambda function version"
@@ -28,10 +32,10 @@ runs:
   using: "composite"
   steps:
     - name: Python dependencies
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       if: ${{ inputs.function-languages == 'python' }}
       with:
-        python-version: "3.9"
+        python-version: ${{ inputs.python-version }}
         cache: "pip"
 
     - name: Package Python function
